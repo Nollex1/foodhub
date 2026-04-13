@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Dashboard - FoodHub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">🍽️ Restaurant Dashboard</div>
+            <div class="header-actions">
+                <span id="restaurantName">Loading...</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <div class="dashboard-sidebar">
+            <nav>
+                <a href="#menu" class="nav-link active" onclick="showSection('menu')">🍽️ Menu Items</a>
+                <a href="#orders" class="nav-link" onclick="showSection('orders')">📋 Orders</a>
+                <a href="#settings" class="nav-link" onclick="showSection('settings')">⚙️ Settings</a>
+            </nav>
+        </div>
+
+        <div class="dashboard-content">
+            <!-- Menu Management Section -->
+            <section id="menu-section" class="dashboard-section active">
+                <div class="section-header">
+                    <h2>Menu Management</h2>
+                    <button class="add-btn" onclick="showAddMenuModal()">+ Add Menu Item</button>
+                </div>
+
+                <div class="menu-grid" id="menuGrid">
+                    <!-- Menu items will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="orders-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Recent Orders</h2>
+                </div>
+                <div id="ordersList">
+                    <p>Orders feature coming soon...</p>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings-section" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Restaurant Settings</h2>
+                </div>
+                <div id="settingsForm">
+                    <p>Settings feature coming soon...</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Add/Edit Menu Item Modal -->
+    <div class="modal" id="menuModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Menu Item</h3>
+                <button class="close-modal" onclick="closeMenuModal()">×</button>
+            </div>
+            <form id="menuForm" onsubmit="saveMenuItem(event)">
+                <input type="hidden" id="menuItemId" name="id">
+
+                <div class="form-group">
+                    <label>Item Name *</label>
+                    <input type="text" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Price (₦) *</label>
+                        <input type="number" name="price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category">
+                            <option value="Main Course">Main Course</option>
+                            <option value="Appetizer">Appetizer</option>
+                            <option value="Dessert">Dessert</option>
+                            <option value="Beverage">Beverage</option>
+                            <option value="Side">Side</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Preparation Time (minutes)</label>
+                    <input type="number" name="preparation_time" min="1">
+                </div>
+
+                <div class="form-group">
+                    <label>Item Image</label>
+                    <input type="file" name="image" accept="image/*" onchange="previewImage(event)">
+                    <div id="imagePreview" class="image-preview" style="display: none;">
+                        <img id="previewImg" src="" alt="Preview">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_available" checked>
+                        Available for order
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn">Save Menu Item</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="restaurant-dashboard.js"></script>
+</body>
+</html>

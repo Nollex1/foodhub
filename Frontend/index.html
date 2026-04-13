@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodHub - Discover & Order from Local Restaurants</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">🍽️ FoodHub</div>
+            
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search restaurants or dishes..."
+                    class="search-input"
+                >
+                <button onclick="searchRestaurants()" class="search-btn">🔍</button>
+            </div>
+            
+            <div class="header-actions">
+                <div class="location" id="locationDisplay">
+                    📍 <span id="currentLocation">Loading...</span>
+                </div>
+                <div class="auth-buttons">
+                    <button class="login-btn" onclick="showLoginModal()">Login</button>
+                    <button class="signup-btn" onclick="showSignupModal()">Sign Up</button>
+                </div>
+                <button class="cart-button" onclick="toggleCart()">
+                    🛒 Cart
+                    <span class="cart-count" id="cartCount">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>Discover Local Restaurants</h1>
+        <p>Order your favorite meals from restaurants near you</p>
+        
+        <div class="filter-section">
+            <select id="cityFilter" onchange="applyFilters()">
+                <option value="">All Cities</option>
+            </select>
+            <select id="categoryFilter" onchange="applyFilters()">
+                <option value="">All Categories</option>
+            </select>
+        </div>
+    </section>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-container" style="display: none;">
+        <div class="spinner"></div>
+        <p>Loading delicious options...</p>
+    </div>
+
+    <!-- Restaurant Listings -->
+    <section class="restaurants-section">
+        <div class="section-header">
+            <h2 id="sectionTitle">Featured Restaurants</h2>
+            <p id="restaurantCount"></p>
+        </div>
+
+        <div class="restaurant-grid" id="restaurantGrid">
+            <!-- Restaurants will be populated by JavaScript -->
+        </div>
+    </section>
+
+    <!-- Single Restaurant View (Modal) -->
+    <div class="restaurant-modal" id="restaurantModal">
+        <div class="restaurant-modal-content">
+            <button class="close-modal" onclick="closeRestaurantModal()">×</button>
+            <div id="restaurantDetails"></div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="cart-modal" id="cartModal">
+        <div class="cart-content">
+            <div class="cart-header">
+                <h2>Your Order</h2>
+                <button class="close-cart" onclick="toggleCart()">×</button>
+            </div>
+            <div class="cart-restaurant-info" id="cartRestaurantInfo"></div>
+            <div class="cart-items" id="cartItems">
+                <div class="empty-cart">
+                    <p style="font-size: 3rem;">🛒</p>
+                    <p>Your cart is empty</p>
+                </div>
+            </div>
+            <div class="cart-total" id="cartTotal" style="display: none;">
+                <div class="cart-total-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotalAmount">₦0</span>
+                </div>
+                <div class="cart-total-row" id="deliveryFeeRow" style="display: none;">
+                    <span>Delivery:</span>
+                    <span id="deliveryFeeAmount">₦0</span>
+                </div>
+                <div class="cart-total-row" style="font-size: 1.8rem; margin-top: 1rem;">
+                    <span>Total:</span>
+                    <span id="totalAmount">₦0</span>
+                </div>
+            </div>
+            <button class="checkout-button" id="checkoutBtn" style="display: none;" onclick="checkout()">
+                Place Order via WhatsApp 📱
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>For Restaurants</h3>
+                <button class="register-btn" onclick="showRegisterModal()">
+                    Register Your Restaurant
+                </button>
+               <button class="dashboard-btn" onclick="showRestaurantLoginModal()">
+                 Restaurant Login
+               </button>
+            </div>
+            <div class="footer-section">
+                <h3>About FoodHub</h3>
+                <p>Connecting food lovers with restaurants</p>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p>📧 support@ezenwatavalentine1@gmail.com</p>
+            </div>
+        </div>
+        <p style="color: #888; margin-top: 2rem; text-align: center;">
+            © 2026 FoodHub - Your Local Food Marketplace
+        </p>
+    </footer>
+
+    <!-- Restaurant Registration Modal -->
+    <div class="register-modal" id="registerModal" style="display: none;">
+        <div class="register-content">
+            <div class="register-header">
+                <h2>Register Your Restaurant</h2>
+                <button class="close-modal" onclick="closeRegisterModal()">×</button>
+            </div>
+            <form id="registerForm" onsubmit="registerRestaurant(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Restaurant Name *</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" name="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>WhatsApp Number</label>
+                        <input type="tel" name="whatsapp">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Address *</label>
+                        <input type="text" name="address" required>
+                    </div>
+                    <div class="form-group">
+                        <label>State *</label>
+                        <select name="state" id="registerStateSelect" required>
+                            <option value="">Select State</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>City *</label>
+                        <select name="city" id="registerCitySelect" required>
+                            <option value="">Select City</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select name="category_id" id="categorySelect">
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Description</label>
+                        <textarea name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Register Restaurant</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="auth-modal" id="loginModal" style="display: none;">
+        <div class="auth-content">
+            <div class="auth-header">
+                <h2>Login to FoodHub</h2>
+                <button class="close-modal" onclick="closeLoginModal()">×</button>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+                <p style="text-align: center; margin-top: 1rem;">
+                    Don't have an account? <a href="#" onclick="switchToSignup(event)" style="color: var(--secondary-color); text-decoration: none;">Sign up</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    </div>
+
+    <!-- Restaurant Menu Manager Modal -->
+    <div class="menu-manager-modal" id="menuManagerModal" style="display: none;">
+        <div class="menu-manager-content">
+            <button class="close-modal" onclick="closeMenuManagerModal()">×</button>
+            <div class="menu-manager-header">
+                <h2>Restaurant Menu Manager</h2>
+                <p>Select your restaurant and add dishes, prices, and photos.</p>
+            </div>
+            <div class="form-group">
+                <label>Choose Your Restaurant</label>
+                <select id="menuRestaurantSelect" onchange="loadRestaurantMenuItems()">
+                    <option value="">Select Restaurant</option>
+                </select>
+            </div>
+            <div id="menuManagerArea" style="display: none;">
+                <div class="menu-manager-grid">
+                    <div class="menu-manager-panel">
+                        <h3>Add / Update Menu Item</h3>
+                        <form id="menuItemForm" onsubmit="createMenuItem(event)">
+                            <div class="form-group">
+                                <label>Dish Name *</label>
+                                <input type="text" id="menuItemName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="menuItemDescription" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Price (₦) *</label>
+                                <input type="number" id="menuItemPrice" min="0" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <input type="text" id="menuItemCategory" placeholder="e.g. Main Course">
+                            </div>
+                            <div class="form-group">
+                                <label>Upload Image</label>
+                                <input type="file" id="menuImageFile" accept="image/*">
+                                <button type="button" class="upload-btn" onclick="uploadMenuImage()">Upload Image</button>
+                            </div>
+                            <div class="form-group">
+                                <label>Image URL</label>
+                                <input type="text" id="menuImageUrl" placeholder="Optional image URL">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="menuItemAvailable" checked>
+                                    Available for order
+                                </label>
+                            </div>
+                            <button type="submit" class="submit-btn">Save Menu Item</button>
+                        </form>
+                    </div>
+                    <div class="menu-manager-panel">
+                        <h3>Existing Menu Items</h3>
+                        <div id="menuItemsList" class="menu-items-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-modal" id="signupModal" style="display: none;">
+        <div class="auth-content">
+            <div class="auth-header">
+                <h2>Create FoodHub Account</h2>
+                <button class="close-modal" onclick="closeSignupModal()">×</button>
+            </div>
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" name="confirmPassword" required>
+                </div>
+                <button type="submit" class="submit-btn">Create Account</button>
+                <p style="text-align: center; margin-top: 1rem;">
+                    Already have an account? <a href="#" onclick="switchToLogin(event)" style="color: var(--secondary-color); text-decoration: none;">Login</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+
+
+
+    <!-- ADD THIS TO YOUR index.html (before closing </body> tag) -->
+<!-- Restaurant Owner Login Modal -->
+
+<div class="auth-modal" id="restaurantLoginModal" style="display: none;">
+    <div class="auth-content">
+        <div class="auth-header">
+            <h2>🍽️ Restaurant Owner Login</h2>
+            <button class="close-modal" onclick="closeRestaurantLoginModal()">×</button>
+        </div>
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 1.5rem;">
+            Login to manage your restaurant and menu
+        </p>
+        <form id="restaurantLoginForm" onsubmit="handleRestaurantLogin(event)">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" required placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required placeholder="Enter your password">
+            </div>
+            <button type="submit" class="submit-btn">Login to Dashboard</button>
+            <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted);">
+                Don't have an account? 
+                <a href="#" onclick="event.preventDefault(); closeRestaurantLoginModal(); showSignupModal();" 
+                   style="color: var(--secondary-color); text-decoration: none; font-weight: bold;">
+                    Sign up first
+                </a>
+            </p>
+            <p style="text-align: center; margin-top: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">
+                After signing up, you can register your restaurant
+            </p>
+        </form>
+    </div>
+</div>
+
+    <script src="app.js"></script>
+</body>
+</html> 
