@@ -1,6 +1,21 @@
 // server.js - FINAL VERSION
 // Main Express server entry point with authentication
 
+
+// Production environment check
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Update CORS
+app.use(cors({
+    origin: isProduction 
+        ? process.env.ALLOWED_ORIGINS?.split(',') 
+        : ['http://localhost:3000', 'http://localhost:5001'],
+    credentials: true
+}));
+
+
+
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
