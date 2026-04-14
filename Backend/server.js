@@ -1,22 +1,7 @@
-// server.js - FINAL VERSION
-// Main Express server entry point with authentication
-
-
-// Production environment check
-const isProduction = process.env.NODE_ENV === 'production';
-
-// Update CORS
-app.use(cors({
-    origin: isProduction 
-        ? process.env.ALLOWED_ORIGINS?.split(',') 
-        : ['http://localhost:3000', 'http://localhost:5001'],
-    credentials: true
-}));
-
-
-
+// server.js - FIXED VERSION
 
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -35,17 +20,26 @@ const authRoutes = require('./routes/auth');
 const uploadRoutes = require('./routes/uploads');
 const reviewsRoutes = require('./routes/reviews');
 
-const app = express();
+const app = express(); // ✅ MUST COME BEFORE ANY app.use
 const PORT = process.env.PORT || 5001;
+
+// ==========================
+// ENVIRONMENT
+// ==========================
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 // ==========================
 // MIDDLEWARE
 // ==========================
 
 app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+    origin: isProduction 
+        ? process.env.ALLOWED_ORIGINS?.split(',') 
+        : ['http://localhost:3000', 'http://localhost:5001'],
     credentials: true
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -107,10 +101,8 @@ app.get('/api/health', async (req, res) => {
     }
 });
 
-// Auth routes (no auth required for login/signup)
+// Routes
 app.use('/api/auth', authRoutes);
-
-// Restaurant routes (mixed auth)
 app.use('/api/restaurants', optionalAuth, restaurantRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -143,15 +135,7 @@ app.use((err, req, res, next) => {
 // ==========================
 
 app.listen(PORT, () => {
-    console.log(`
-╔═══════════════════════════════════════╗
-║  🍽️  FoodHub Restaurant Platform     ║
-║  Server running on port ${PORT}       ║
-║  Environment: ${process.env.NODE_ENV || 'development'}              ║
-║  Database: PostgreSQL                 ║
-║  🔐 Auth: Enabled                     ║
-╚═══════════════════════════════════════╝
-    `);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
 
 // Graceful shutdown
