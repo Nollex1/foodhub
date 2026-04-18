@@ -8,7 +8,7 @@ const path = require('path');
 const { pool } = require('./config/database');
 
 // Import middleware
-const { authenticateToken, optionalAuth } = require('../middleware/auth');
+const { authenticateToken, optionalAuth } = require('./middleware/auth');
 
 // Import routes
 const restaurantRoutes = require('./routes/restaurants');
