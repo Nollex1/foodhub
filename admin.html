@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ff6b35">
     <title>FoodHub Admin - User Management</title>
     <style>
         * {
@@ -44,6 +45,23 @@
             font-size: 1.2rem;
         }
 
+        .back-home {
+            display: inline-block;
+            margin-bottom: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 107, 53, 0.2);
+            border: 2px solid #ff6b35;
+            color: #ffa500;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .back-home:hover {
+            background: #ff6b35;
+            color: white;
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -83,6 +101,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .section-header h2 {
@@ -93,6 +113,7 @@
         .filter-buttons {
             display: flex;
             gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .filter-btn {
@@ -103,6 +124,7 @@
             border-radius: 25px;
             cursor: pointer;
             transition: all 0.3s;
+            font-size: 0.9rem;
         }
 
         .filter-btn:hover,
@@ -115,6 +137,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
+            overflow-x: auto;
         }
 
         .users-table th,
@@ -151,7 +174,8 @@
         .loading {
             text-align: center;
             padding: 3rem;
-            color: #888;
+            color: #ffa500;
+            font-size: 1.2rem;
         }
 
         .error {
@@ -172,10 +196,16 @@
             cursor: pointer;
             font-weight: bold;
             margin-bottom: 1rem;
+            font-size: 1rem;
+            transition: transform 0.3s;
         }
 
         .export-btn:hover {
             transform: scale(1.05);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
         }
 
         @media (max-width: 768px) {
@@ -183,8 +213,12 @@
                 padding: 1rem;
             }
 
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
             .users-table {
-                font-size: 0.9rem;
+                font-size: 0.85rem;
             }
 
             .users-table th,
@@ -195,11 +229,18 @@
             .stats {
                 grid-template-columns: 1fr;
             }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <a href="/" class="back-home">← Back to Home</a>
+
         <div class="header">
             <h1>🍽️ FoodHub Admin</h1>
             <p>User Management Dashboard</p>
@@ -238,7 +279,14 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:5001/api';
+        // Detect environment and set API URL
+        const isProduction = window.location.hostname !== 'localhost';
+        const API_BASE_URL = isProduction 
+            ? window.location.origin + '/api'
+            : 'http://localhost:5001/api';
+
+        console.log('Environment:', isProduction ? 'PRODUCTION' : 'DEVELOPMENT');
+        console.log('API URL:', API_BASE_URL);
 
         // Load data when page loads
         document.addEventListener('DOMContentLoaded', () => {
@@ -248,16 +296,24 @@
 
         async function loadStats() {
             try {
+                console.log('Loading stats from:', `${API_BASE_URL}/admin/stats`);
                 const response = await fetch(`${API_BASE_URL}/admin/stats`);
                 const data = await response.json();
 
+                console.log('Stats response:', data);
+
                 if (data.success) {
-                    document.getElementById('totalUsers').textContent = data.stats.total_users;
-                    document.getElementById('recentUsers').textContent = data.stats.recent_users_30_days;
-                    document.getElementById('todayUsers').textContent = data.stats.new_users_today;
+                    document.getElementById('totalUsers').textContent = data.stats.total_users || 0;
+                    document.getElementById('recentUsers').textContent = data.stats.recent_users_30_days || 0;
+                    document.getElementById('todayUsers').textContent = data.stats.new_users_today || 0;
+                } else {
+                    console.error('Stats load failed:', data);
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
+                document.getElementById('totalUsers').textContent = '0';
+                document.getElementById('recentUsers').textContent = '0';
+                document.getElementById('todayUsers').textContent = '0';
             }
         }
 
@@ -265,19 +321,29 @@
             const container = document.getElementById('usersContainer');
             container.innerHTML = '<div class="loading">Loading users...</div>';
 
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event?.target?.classList?.add('active');
+
             try {
                 const endpoint = filter === 'recent' ? '/admin/users/recent' : '/admin/users';
+                console.log('Loading users from:', `${API_BASE_URL}${endpoint}`);
+                
                 const response = await fetch(`${API_BASE_URL}${endpoint}`);
                 const data = await response.json();
+
+                console.log('Users response:', data);
 
                 if (data.success) {
                     displayUsers(data.users);
                 } else {
-                    container.innerHTML = '<div class="error">Failed to load users</div>';
+                    container.innerHTML = `<div class="error">Failed to load users: ${data.error}</div>`;
                 }
             } catch (error) {
                 console.error('Error loading users:', error);
-                container.innerHTML = '<div class="error">Error loading users. Check console for details.</div>';
+                container.innerHTML = `<div class="error">Error loading users: ${error.message}</div>`;
             }
         }
 
@@ -288,37 +354,33 @@
             }
 
             const tableHTML = `
-                <table class="users-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Registered</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${users.map(user => `
+                <div class="table-wrapper">
+                    <table class="users-table">
+                        <thead>
                             <tr>
-                                <td>${user.id}</td>
-                                <td>${user.name}</td>
-                                <td class="user-email">${user.email}</td>
-                                <td class="user-phone">${user.phone || 'N/A'}</td>
-                                <td class="user-date">${new Date(user.created_at).toLocaleDateString()}</td>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Registered</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${users.map(user => `
+                                <tr>
+                                    <td>${user.id}</td>
+                                    <td>${user.name}</td>
+                                    <td class="user-email">${user.email}</td>
+                                    <td class="user-phone">${user.phone || 'N/A'}</td>
+                                    <td class="user-date">${new Date(user.created_at).toLocaleDateString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             `;
 
             document.getElementById('usersContainer').innerHTML = tableHTML;
-
-            // Update filter buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[onclick="loadUsers('${users.length > 10 ? 'all' : 'recent'}')"]`).classList.add('active');
         }
 
         function exportToCSV() {
@@ -333,7 +395,7 @@
             const rows = table.querySelectorAll('tbody tr');
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                const rowData = Array.from(cells).map(cell => `"${cell.textContent}"`).join(',');
+                const rowData = Array.from(cells).map(cell => `"${cell.textContent.trim()}"`).join(',');
                 csv += rowData + '\n';
             });
 
@@ -343,11 +405,13 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = `foodhub_users_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
         }
 
-        // Auto-refresh every 30 seconds
+        // Auto-refresh stats every 30 seconds
         setInterval(() => {
             loadStats();
         }, 30000);
